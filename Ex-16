@@ -36,84 +36,40 @@ Write a PL/SQL block to adjust the salary of the employee whose ID 122.
 Sample table: employees
 
 DECLARE
-  salary_of_emp  NUMBER(8,2);
- 
-  PROCEDURE approx_salary (
-    emp        NUMBER, 
-    empsal IN OUT NUMBER,
-    addless     NUMBER
-  ) IS
-  BEGIN
-    empsal := empsal + addless;
-  END;
- 
+   new_salary NUMBER;
 BEGIN
-  SELECT salary INTO salary_of_emp
-  FROM employees
-  WHERE employee_id = 122;
- 
-  DBMS_OUTPUT.PUT_LINE
-   ('Before invoking procedure, salary_of_emp: ' || salary_of_emp);
- 
-  approx_salary (100, salary_of_emp, 1000);
- 
-  DBMS_OUTPUT.PUT_LINE
-   ('After invoking procedure, salary_of_emp: ' || salary_of_emp);
+   new_salary := 5000;
+   UPDATE employees
+   SET salary = new_salary
+   WHERE id = 122;
+   DBMS_OUTPUT.PUT_LINE('Salary updated for employee with ID 122.');
+   COMMIT;
+EXCEPTION
+   WHEN OTHERS THEN
+      DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
 END;
 /
+
 
 
 PROGRAM 4
-Write a PL/SQL block to create a procedure using the &quot;IS [NOT] NULL Operator&quot;
+Write a PL/SQL block to create a procedure using the "IS [NOT] NULL Operator" 
 and show AND operator returns TRUE if and only if both operands are TRUE.
 
-PROCEDURE:-
-CREATE OR REPLACE PROCEDURE pri_bool(
-  boo_name   VARCHAR2,
-  boo_val    BOOLEAN
-) IS
+CREATE OR REPLACE PROCEDURE demo_operators (var1 IN NUMBER, var2 IN NUMBER) IS
 BEGIN
-  IF boo_val IS NULL THEN
-    DBMS_OUTPUT.PUT_LINE( boo_name || ' = NULL');
-  ELSIF boo_val = TRUE THEN
-    DBMS_OUTPUT.PUT_LINE( boo_name || ' = TRUE');
-  ELSE
-    DBMS_OUTPUT.PUT_LINE( boo_name || ' = FALSE');
-  END IF;
+   IF var1 IS NOT NULL AND var2 IS NOT NULL THEN
+      DBMS_OUTPUT.PUT_LINE('Both operands are not NULL, AND operator returns TRUE');
+   ELSE
+      DBMS_OUTPUT.PUT_LINE('One or both operands are NULL, AND operator returns FALSE');
+   END IF;
 END;
 /
 
-MAIN:-
-DECLARE
-  PROCEDURE pri_m_or_n (
-    m  BOOLEAN,
-    n  BOOLEAN
-  ) IS
-  BEGIN
-   pri_bool ('m', m);
-   pri_bool ('n', n);
-   pri_bool ('m OR n', m OR n);
- END pri_m_or_n;
 BEGIN
-DBMS_OUTPUT.PUT_LINE('------------- FOR m OR n both FALSE ---------------------');
- pri_m_or_n (FALSE, FALSE);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m TRUE OR n FALSE ---------------------');
- pri_m_or_n (TRUE, FALSE);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m FALSE OR n TRUE ---------------------');
- pri_m_or_n (FALSE, TRUE);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m TRUE OR n TRUE ---------------------');
- pri_m_or_n (TRUE, TRUE);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m TRUE OR n NULL ---------------------');
- pri_m_or_n (TRUE, NULL);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m FALSE OR n NULL---------------------');
- pri_m_or_n (FALSE, NULL);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m NULL OR n TRUE ---------------------');
- pri_m_or_n (NULL, TRUE);
-DBMS_OUTPUT.PUT_LINE('------------- FOR m NULL OR n FALSE ---------------------');
- pri_m_or_n (NULL, FALSE);
+demo_operators(10, 20);
 END;
 /
-
 
 PROGRAM 5
 Write a PL/SQL block to describe the usage of LIKE operator including wildcard
@@ -364,40 +320,31 @@ Write a PL/SQL program to display the employee IDs, names, and job history start
 dates of all employees.
 
 DECLARE
-    CURSOR employees_cur IS
-      SELECT employee_id,
-             first_name,
-             job_title,
-             hire_date
-      FROM   employees
-             NATURAL join jobs;
-    emp_first_date DATE;
+  v_employee_id employees.employee_id%TYPE;
+  v_full_name employees.first_name%TYPE;
+  v_start_date job_history.start_date%TYPE;
+  
+  CURSOR c_emp_job_history IS
+    SELECT e.employee_id, e.first_name || ' ' || e.last_name AS full_name, jh.start_date
+    FROM employees e
+    JOIN job_history jh ON e.employee_id = jh.employee_id;
+    
 BEGIN
-    dbms_output.Put_line(Rpad('Employee ID', 15)
-                         ||Rpad('First Name', 25)
-                         ||Rpad('Job Title', 35)
-                         ||'First Date');
-
-dbms_output.Put_line('-----------------------------------------------------------------------------------------');
-
-FOR emp_sal_rec IN employees_cur LOOP
-    -- find out most recent end_date in job_history
-    SELECT Max(end_date) + 1
-    INTO   emp_first_date
-    FROM   job_history
-    WHERE  employee_id = emp_sal_rec.employee_id;
-
-    IF emp_first_date IS NULL THEN
-      emp_first_date := emp_sal_rec.hire_date;
-    END IF;
-
-    dbms_output.Put_line(Rpad(emp_sal_rec.employee_id, 15)
-                         ||Rpad(emp_sal_rec.first_name, 25)
-                         || Rpad(emp_sal_rec.job_title, 35)
-                         || To_char(emp_first_date, 'dd-mon-yyyy'));
-END LOOP;
-END; 
+  DBMS_OUTPUT.PUT_LINE('Employee ID | Full Name           | Job History Start Date');
+  DBMS_OUTPUT.PUT_LINE('---------------------------------------------------------');
+  
+  OPEN c_emp_job_history;
+  FETCH c_emp_job_history INTO v_employee_id, v_full_name, v_start_date;
+  
+  WHILE c_emp_job_history%FOUND LOOP
+    DBMS_OUTPUT.PUT_LINE(v_employee_id || '        | ' || v_full_name || ' | ' || v_start_date);
+    FETCH c_emp_job_history INTO v_employee_id, v_full_name, v_start_date;
+  END LOOP;
+  
+  CLOSE c_emp_job_history;
+END;
 /
+
 
 
 PROGRAM 15
