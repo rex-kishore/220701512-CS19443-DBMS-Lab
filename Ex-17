@@ -3,16 +3,31 @@ Program 1
 
 FACTORIAL OF A NUMBER USING FUNCTION
 
-declare 
-fac number :=1;    
-n number := &1;    
-begin            
-while n > 0 loop   
-fac:=n*fac;         
-n:=n-1;            
-end loop;       
-dbms_output.put_line(fac);  
-end;
+CREATE OR REPLACE FUNCTION factorial(n IN NUMBER) RETURN NUMBER IS
+  result NUMBER := 1;
+BEGIN
+  IF n < 0 THEN
+    RAISE_APPLICATION_ERROR(-20001, 'Negative input not allowed');
+  ELSIF n = 0 THEN
+    RETURN 1;
+  ELSE
+    FOR i IN 1..n LOOP
+      result := result * i;
+    END LOOP;
+    RETURN result;
+  END IF;
+END;
+/
+
+-- To involke the function
+DECLARE
+  num NUMBER := :input_num;
+  fact NUMBER;
+BEGIN
+  fact := factorial(num);
+  
+DBMS_OUTPUT.PUT_LINE('Factorial of ' || num || ' is ' || fact);
+END;
 /
 
 Program 2
